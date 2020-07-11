@@ -1,9 +1,9 @@
 {
   "name": "str-fragment",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Capture text fragments based on regular expressions that are executed for each line of the text",
-  "main": "node.js",
-  "module": "module.js",
+  "main": "cjs.js",
+  "module": "esm.js",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
@@ -24,6 +24,7 @@
     "ava": "^3.10.1",
     "rollup": "^2.21.0"
   },
+  "typings": "types.d.ts",
   "ava": {
     "files": [
       "test/**/*.test.js"
