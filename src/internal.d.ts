@@ -26,4 +26,5 @@ export interface config {
   closed: RegExp;
   limit?: number;
   filter?: filter;
+  forceNextLine?: boolean;
 }

@@ -40,11 +40,8 @@ function walkFragments(text, fragments, walk) {
 /**
  *
  * @param {string} text
- * @param {object} config
- * @param {RegExp} config.open
- * @param {RegExp} config.closed
- * @param {number} [config.limit]
- * @param {(argsOpen:string[],argsClosed:string[])=>boolean} [config.filter]
+ * @param {import("./internal").config} config
+ * @returns {import("./internal").captures}
  */
 function getFragments(text, { open, closed, limit, filter }) {
   let lines = text.split(/\n/);
