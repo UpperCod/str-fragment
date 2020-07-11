@@ -1,0 +1,32 @@
+{
+  "name": "str-fragment",
+  "version": "1.0.0",
+  "description": "Capture text fragments based on regular expressions that are executed for each line of the text",
+  "main": "node.js",
+  "module": "module.js",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "ava",
+    "prepare": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uppercod/str_fragment.git"
+  },
+  "author": "UpperCod",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/uppercod/str_fragment/issues"
+  },
+  "homepage": "https://github.com/uppercod/str_fragment#readme",
+  "devDependencies": {
+    "ava": "^3.10.1",
+    "rollup": "^2.21.0"
+  },
+  "ava": {
+    "files": [
+      "test/**/*.test.js"
+    ]
+  }
+}
