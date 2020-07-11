@@ -43,7 +43,10 @@ function walkFragments(text, fragments, walk) {
  * @param {import("./internal").config} config
  * @returns {import("./internal").captures}
  */
-function getFragments(text, { open, closed, limit, filter }) {
+function getFragments(
+  text,
+  { open, closed, limit, filter, forceNextLine }
+) {
   let lines = text.split(/\n/);
   let length = lines.length;
   /**@type {(import("./internal").capture[]|false)} */
@@ -75,6 +78,7 @@ function getFragments(text, { open, closed, limit, filter }) {
       }
     }
     if (ref) {
+      if (forceNextLine && ref[0].line == i) continue;
       let testClosed = line.match(closed);
       if (testClosed) {
         let [text, ...args] = testClosed;
