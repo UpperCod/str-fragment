@@ -1,4 +1,4 @@
-import { captures, filter, replace, captures } from "./internal";
+import { captures, replace, captures, walk } from "./internal";
 
 declare module "str-fragment" {
   export function getFragments(text: string, config: config): captures;
@@ -9,9 +9,9 @@ declare module "str-fragment" {
     replace: replace
   ): string;
 
-  export function walkFragments({
-    before: string,
-    after: string,
-    value: string,
-  }): void;
+  export function walkFragments(
+    text: string,
+    fragments: captures,
+    walk: walk
+  ): void;
 }

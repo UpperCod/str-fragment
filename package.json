@@ -1,6 +1,6 @@
 {
   "name": "str-fragment",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Capture text fragments based on regular expressions that are executed for each line of the text",
   "main": "cjs.js",
   "module": "esm.js",
