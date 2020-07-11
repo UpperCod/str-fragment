@@ -16,3 +16,28 @@ export interface replace {
 export interface walk {
   ({ before: string, after: string, value: string }): void;
 }
+
+export interface filter {
+  (argsOpen: string[], argsClosed: string[]): boolean | null;
+}
+
+export interface config {
+  open: RegExp;
+  closed: RegExp;
+  limit?: number;
+  filter: filter;
+}
+
+export function getFragments(text: string, config: config): captures;
+
+export function replaceFragments(
+  text: string,
+  fragments: captures,
+  replace: replace
+): string;
+
+export function walkFragments({
+  before: string,
+  after: string,
+  value: string,
+}): void;
