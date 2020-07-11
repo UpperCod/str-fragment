@@ -18,14 +18,15 @@ export function getFragments(
   let size = 0;
   for (let i = 0; i < length; i++) {
     let line = lines[i];
-    let lineSize = line.length;
     let move = 0;
     let indent = line.match(/^\s*/)[0].length;
+    let currentSize = size;
+    size += line.length;
     if (!ref) {
       let testOpen = line.match(open);
       if (testOpen) {
         let [text, ...args] = testOpen;
-        line = line.replace(open, "");
+        line = line.replace(text, "");
         move = text.length;
         ref = [
           {
@@ -33,8 +34,8 @@ export function getFragments(
             args,
             line: i,
             indent,
-            start: size + i + testOpen.index,
-            end: size + i + testOpen.index + text.length,
+            start: currentSize + i + testOpen.index,
+            end: currentSize + i + testOpen.index + text.length,
           },
         ];
       }
@@ -50,8 +51,8 @@ export function getFragments(
           line: i,
           indent,
           args,
-          start: size + move + i + testClosed.index,
-          end: size + move + i + testClosed.index + text.length,
+          start: currentSize + move + i + testClosed.index,
+          end: currentSize + move + i + testClosed.index + text.length,
         });
         let index = fragments.push(ref);
         if (limit != null && index > limit) {
@@ -60,7 +61,6 @@ export function getFragments(
         ref = false;
       }
     }
-    size += lineSize;
   }
   return fragments;
 }

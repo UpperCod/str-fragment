@@ -63,7 +63,7 @@ function getFragments(
       let testOpen = line.match(open);
       if (testOpen) {
         let [text, ...args] = testOpen;
-        line = line.replace(open, "");
+        line = line.replace(text, "");
         move = text.length;
         ref = [
           {
