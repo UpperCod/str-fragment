@@ -1,9 +1,12 @@
 {
-  "name": "str-fragment",
-  "version": "1.1.2",
+  "name": "@uppercod/str-fragment",
+  "version": "1.0.0",
   "description": "Capture text fragments based on regular expressions that are executed for each line of the text",
   "main": "cjs.js",
   "module": "esm.js",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
@@ -12,14 +15,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/uppercod/str_fragment.git"
+    "url": "git+https://github.com/uppercod/str-fragment.git"
   },
   "author": "UpperCod",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/uppercod/str_fragment/issues"
+    "url": "https://github.com/uppercod/str-fragment/issues"
   },
-  "homepage": "https://github.com/uppercod/str_fragment#readme",
+  "homepage": "https://github.com/uppercod/str-fragment#readme",
   "devDependencies": {
     "ava": "^3.10.1",
     "rollup": "^2.21.0"
