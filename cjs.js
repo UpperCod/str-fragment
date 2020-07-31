@@ -7,14 +7,14 @@ Object.defineProperty(exports, '__esModule', { value: true });
  * @typedef {Object} CallbackParam
  * @property {string} body
  * @property {string} content
- * @property {import("./index").Item} open
- * @property {import("./index").Item} end
+ * @property {import("./internal").Item} open
+ * @property {import("./internal").Item} end
  */
 
 /**
  * @param {string} text
  * @param {number} diff
- * @param {import("./index").Block} block
+ * @param {import("./internal").Block} block
  * @param {(param:CallbackParam)=>string} callback
  */
 function replaceItem(text, diff, { open, end }, callback) {
@@ -31,7 +31,7 @@ function replaceItem(text, diff, { open, end }, callback) {
 /**
  *
  * @param {string} text
- * @param {import("./index").Block[]} blocks
+ * @param {import("./internal").Block[]} blocks
  * @param {(param:CallbackParam)=>string} callback
  * @param {number} [limit=-1]
  * @returns {string}
@@ -50,7 +50,7 @@ function replaceFragments(text, blocks, callback, limit = -1) {
 /**
  *
  * @param {string} text
- * @param {import("./index").Block[]} blocks
+ * @param {import("./internal").Block[]} blocks
  * @param {(param:CallbackParam)=>string} callback
  * @param {number} [limit=-1]
  * @returns {void}
@@ -75,11 +75,12 @@ function walkFragments(text, blocks, callback, limit = -1) {
 function find(text, reg) {
     let current;
     let position = 0;
-    /**@type {Item[]} */
+    /**@type {import("./internal").Item[]} */
     let items = [];
     while ((current = text.match(reg))) {
         let [value, ...args] = current;
         let length = current.index + value.length;
+        if (!length) break;
         items.push({
             value,
             args,
@@ -94,21 +95,26 @@ function find(text, reg) {
 /**
  *
  * @param {string} text
- * @param {{open:RegExp,end:RegExp}} find
+ * @param {{open:RegExp,end:RegExp,equal:boolean}} find
  */
-function getFragments(text, { open, end }) {
+function getFragments(text, { open, end, equal }) {
     let itemsOpen = find(text, open);
-    let itemsEnd = find(text, end).filter(
-        (block) =>
-            !itemsOpen.some(
-                ({ indexOpen, indexEnd }) =>
-                    block.indexOpen >= indexOpen && block.indexOpen <= indexEnd
-            )
-    );
+    let itemsEnd = find(text, end);
 
     let itemOpen;
-    /**@type {Block[]} */
+    /**@type {import("./internal").Block[]} */
     let blocks = [];
+
+    itemsEnd = equal
+        ? itemsEnd
+        : itemsEnd.filter(
+              (block) =>
+                  !itemsOpen.some(
+                      ({ indexOpen, indexEnd }) =>
+                          block.indexOpen >= indexOpen &&
+                          block.indexOpen <= indexEnd
+                  )
+          );
 
     while ((itemOpen = itemsOpen.pop())) {
         let nextItemsEnd = [...itemsEnd];
@@ -143,20 +149,6 @@ function getFragments(text, { open, end }) {
         }
     });
 }
-
-/**
- * @typedef {Object} Item
- * @property {string} value
- * @property {any[]} args
- * @property {number} indexOpen
- * @property {number} indexEnd
- */
-
-/**
- * @typedef {Object} Block
- * @property {Item} open
- * @property {Item} end
- */
 
 exports.getFragments = getFragments;
 exports.replaceFragments = replaceFragments;
