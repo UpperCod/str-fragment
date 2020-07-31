@@ -3,109 +3,160 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
 /**
- * Replaces a group of fragments
- * @param {string} text
- * @param {import("./internal").captures} fragments
- * @param {import("./internal").replace} replace
+ *
+ * @typedef {Object} CallbackParam
+ * @property {string} body
+ * @property {string} content
+ * @property {import("./index").Item} open
+ * @property {import("./index").Item} end
  */
-function replaceFragments(text, fragments, replace) {
-  let move = 0;
-  return fragments
-    .reduce((splitText, [open, closed]) => {
-      let fBefore = splitText.slice(move + open.start, move + open.end);
-      let fValue = splitText.slice(move + open.end, move + closed.start);
-      let fAfter = splitText.slice(move + closed.start, move + closed.end);
-      let before = fBefore.join("");
-      let value = fValue.join("");
-      let after = fAfter.join("");
-      let group = before + value + after;
-      let next = replace({ before, after, value }, [open, closed]);
-      if (next != null) {
-        let before = splitText.slice(0, move + open.start);
-        let after = splitText.slice(move + closed.end);
-        move += next.length - group.length;
-        return [...before, ...next, ...after];
-      }
-      return splitText;
-    }, text.split(""))
-    .join("");
-}
+
 /**
  * @param {string} text
- * @param {import("./internal").captures} fragments
- * @param {import("./internal").walk} walk
+ * @param {number} diff
+ * @param {import("./index").Block} block
+ * @param {(param:CallbackParam)=>string} callback
  */
-function walkFragments(text, fragments, walk) {
-  replaceFragments(text, fragments, (fragment) => {
-    walk(fragment);
-  });
+function replaceItem(text, diff, { open, end }, callback) {
+    let before = text.slice(0, open.indexOpen + diff);
+    let after = text.slice(end.indexEnd + diff);
+    let body = text.slice(open.indexOpen + diff, end.indexEnd + diff);
+    let content = text.slice(open.indexEnd + diff, end.indexOpen + diff);
+    let nextContent = callback({ body, content, open, end }) + "";
+    diff += nextContent.length - body.length;
+    text = before + nextContent + after;
+    return { diff, text };
 }
 
 /**
  *
  * @param {string} text
- * @param {import("./internal").config} config
- * @returns {import("./internal").captures}
+ * @param {import("./index").Block[]} blocks
+ * @param {(param:CallbackParam)=>string} callback
+ * @param {number} [limit=-1]
+ * @returns {string}
  */
-function getFragments(
-  text,
-  { open, closed, limit, filter, forceNextLine }
-) {
-  let lines = text.split(/\n/);
-  let length = lines.length;
-  /**@type {(import("./internal").capture[]|false)} */
-  let ref = false;
-  /**@type {import("./internal").captures} */
-  let fragments = [];
-  let size = 0;
-  for (let i = 0; i < length; i++) {
-    let line = lines[i];
-    let move = 0;
-    let indent = line.match(/^\s*/)[0].length;
-    let currentSize = size;
-    size += line.length;
-    if (!ref) {
-      let testOpen = line.match(open);
-      if (testOpen) {
-        let [text, ...args] = testOpen;
-        line = line.replace(text, "");
-        move = text.length;
-        ref = [
-          {
-            text,
-            args,
-            line: i,
-            indent,
-            start: currentSize + i + testOpen.index,
-            end: currentSize + i + testOpen.index + text.length,
-          },
-        ];
-      }
+function replaceFragments(text, blocks, callback, limit = -1) {
+    let diff = 0;
+    for (let i = 0; i < blocks.length; i++) {
+        let res = replaceItem(text, diff, blocks[i], callback);
+        diff = res.diff;
+        text = res.text;
+        if (limit == i + 1) break;
     }
-    if (ref) {
-      if (forceNextLine && ref[0].line == i) continue;
-      let testClosed = line.match(closed);
-      if (testClosed) {
-        let [text, ...args] = testClosed;
-        if (filter && !filter(ref[0].args, args)) continue;
-        ref.push({
-          text,
-          line: i,
-          indent,
-          args,
-          start: currentSize + move + i + testClosed.index,
-          end: currentSize + move + i + testClosed.index + text.length,
-        });
-        let index = fragments.push(ref);
-        if (limit != null && index > limit) {
-          break;
-        }
-        ref = false;
-      }
-    }
-  }
-  return fragments;
+    return text;
 }
+
+/**
+ *
+ * @param {string} text
+ * @param {import("./index").Block[]} blocks
+ * @param {(param:CallbackParam)=>string} callback
+ * @param {number} [limit=-1]
+ * @returns {void}
+ */
+function walkFragments(text, blocks, callback, limit = -1) {
+    replaceFragments(
+        text,
+        blocks,
+        (param) => {
+            callback(param);
+            return param.body;
+        },
+        limit
+    );
+}
+
+/**
+ *
+ * @param {string} text
+ * @param {RegExp} reg
+ */
+function find(text, reg) {
+    let current;
+    let position = 0;
+    /**@type {Item[]} */
+    let items = [];
+    while ((current = text.match(reg))) {
+        let [value, ...args] = current;
+        let length = current.index + value.length;
+        items.push({
+            value,
+            args,
+            indexOpen: position + current.index,
+            indexEnd: position + length,
+        });
+        position += length;
+        text = text.slice(length);
+    }
+    return items;
+}
+/**
+ *
+ * @param {string} text
+ * @param {{open:RegExp,end:RegExp}} find
+ */
+function getFragments(text, { open, end }) {
+    let itemsOpen = find(text, open);
+    let itemsEnd = find(text, end).filter(
+        (block) =>
+            !itemsOpen.some(
+                ({ indexOpen, indexEnd }) =>
+                    block.indexOpen >= indexOpen && block.indexOpen <= indexEnd
+            )
+    );
+
+    let itemOpen;
+    /**@type {Block[]} */
+    let blocks = [];
+
+    while ((itemOpen = itemsOpen.pop())) {
+        let nextItemsEnd = [...itemsEnd];
+        let itemEnd;
+        itemsEnd = [];
+        while ((itemEnd = nextItemsEnd.shift())) {
+            if (itemEnd.indexOpen > itemOpen.indexEnd) {
+                blocks.unshift({ open: itemOpen, end: itemEnd });
+                itemsEnd.push(...nextItemsEnd);
+                break;
+            } else {
+                itemsEnd.push(itemEnd);
+            }
+        }
+    }
+
+    let parentBlock;
+
+    return blocks.filter((block) => {
+        if (!parentBlock) {
+            parentBlock = block;
+            return true;
+        }
+        if (
+            block.open.indexOpen > parentBlock.open.indexOpen &&
+            block.end.indexEnd < parentBlock.end.indexEnd
+        ) {
+            return false;
+        } else {
+            parentBlock = block;
+            return true;
+        }
+    });
+}
+
+/**
+ * @typedef {Object} Item
+ * @property {string} value
+ * @property {any[]} args
+ * @property {number} indexOpen
+ * @property {number} indexEnd
+ */
+
+/**
+ * @typedef {Object} Block
+ * @property {Item} open
+ * @property {Item} end
+ */
 
 exports.getFragments = getFragments;
 exports.replaceFragments = replaceFragments;

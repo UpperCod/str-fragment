@@ -1,38 +1,64 @@
 /**
- * Replaces a group of fragments
- * @param {string} text
- * @param {import("./internal").captures} fragments
- * @param {import("./internal").replace} replace
+ *
+ * @typedef {Object} CallbackParam
+ * @property {string} body
+ * @property {string} content
+ * @property {import("./internal").Item} open
+ * @property {import("./internal").Item} end
  */
-export function replaceFragments(text, fragments, replace) {
-  let move = 0;
-  return fragments
-    .reduce((splitText, [open, closed]) => {
-      let fBefore = splitText.slice(move + open.start, move + open.end);
-      let fValue = splitText.slice(move + open.end, move + closed.start);
-      let fAfter = splitText.slice(move + closed.start, move + closed.end);
-      let before = fBefore.join("");
-      let value = fValue.join("");
-      let after = fAfter.join("");
-      let group = before + value + after;
-      let next = replace({ before, after, value }, [open, closed]);
-      if (next != null) {
-        let before = splitText.slice(0, move + open.start);
-        let after = splitText.slice(move + closed.end);
-        move += next.length - group.length;
-        return [...before, ...next, ...after];
-      }
-      return splitText;
-    }, text.split(""))
-    .join("");
-}
+
 /**
  * @param {string} text
- * @param {import("./internal").captures} fragments
- * @param {import("./internal").walk} walk
+ * @param {number} diff
+ * @param {import("./internal").Block} block
+ * @param {(param:CallbackParam)=>string} callback
  */
-export function walkFragments(text, fragments, walk) {
-  replaceFragments(text, fragments, (fragment) => {
-    walk(fragment);
-  });
+function replaceItem(text, diff, { open, end }, callback) {
+    let before = text.slice(0, open.indexOpen + diff);
+    let after = text.slice(end.indexEnd + diff);
+    let body = text.slice(open.indexOpen + diff, end.indexEnd + diff);
+    let content = text.slice(open.indexEnd + diff, end.indexOpen + diff);
+    let nextContent = callback({ body, content, open, end }) + "";
+    diff += nextContent.length - body.length;
+    text = before + nextContent + after;
+    return { diff, text };
+}
+
+/**
+ *
+ * @param {string} text
+ * @param {import("./internal").Block[]} blocks
+ * @param {(param:CallbackParam)=>string} callback
+ * @param {number} [limit=-1]
+ * @returns {string}
+ */
+export function replaceFragments(text, blocks, callback, limit = -1) {
+    let diff = 0;
+    for (let i = 0; i < blocks.length; i++) {
+        let res = replaceItem(text, diff, blocks[i], callback);
+        diff = res.diff;
+        text = res.text;
+        if (limit == i + 1) break;
+    }
+    return text;
+}
+
+/**
+ *
+ * @param {string} text
+ * @param {import("./internal").Block[]} blocks
+ * @param {(param:CallbackParam)=>string} callback
+ * @param {number} [limit=-1]
+ * @returns {void}
+ */
+export function walkFragments(text, blocks, callback, limit = -1) {
+    replaceFragments(
+        text,
+        blocks,
+        (param) => {
+            callback(param);
+            return param.body;
+        },
+        limit
+    );
 }

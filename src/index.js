@@ -2,65 +2,82 @@ export * from "./utils";
 /**
  *
  * @param {string} text
- * @param {import("./internal").config} config
- * @returns {import("./internal").captures}
+ * @param {RegExp} reg
  */
-export function getFragments(
-  text,
-  { open, closed, limit, filter, forceNextLine }
-) {
-  let lines = text.split(/\n/);
-  let length = lines.length;
-  /**@type {(import("./internal").capture[]|false)} */
-  let ref = false;
-  /**@type {import("./internal").captures} */
-  let fragments = [];
-  let size = 0;
-  for (let i = 0; i < length; i++) {
-    let line = lines[i];
-    let move = 0;
-    let indent = line.match(/^\s*/)[0].length;
-    let currentSize = size;
-    size += line.length;
-    if (!ref) {
-      let testOpen = line.match(open);
-      if (testOpen) {
-        let [text, ...args] = testOpen;
-        line = line.replace(text, "");
-        move = text.length;
-        ref = [
-          {
-            text,
+function find(text, reg) {
+    let current;
+    let position = 0;
+    /**@type {import("./internal").Item[]} */
+    let items = [];
+    while ((current = text.match(reg))) {
+        let [value, ...args] = current;
+        let length = current.index + value.length;
+        if (!length) break;
+        items.push({
+            value,
             args,
-            line: i,
-            indent,
-            start: currentSize + i + testOpen.index,
-            end: currentSize + i + testOpen.index + text.length,
-          },
-        ];
-      }
-    }
-    if (ref) {
-      if (forceNextLine && ref[0].line == i) continue;
-      let testClosed = line.match(closed);
-      if (testClosed) {
-        let [text, ...args] = testClosed;
-        if (filter && !filter(ref[0].args, args)) continue;
-        ref.push({
-          text,
-          line: i,
-          indent,
-          args,
-          start: currentSize + move + i + testClosed.index,
-          end: currentSize + move + i + testClosed.index + text.length,
+            indexOpen: position + current.index,
+            indexEnd: position + length,
         });
-        let index = fragments.push(ref);
-        if (limit != null && index > limit) {
-          break;
-        }
-        ref = false;
-      }
+        position += length;
+        text = text.slice(length);
     }
-  }
-  return fragments;
+    return items;
+}
+/**
+ *
+ * @param {string} text
+ * @param {{open:RegExp,end:RegExp,equal:boolean}} find
+ */
+export function getFragments(text, { open, end, equal }) {
+    let itemsOpen = find(text, open);
+    let itemsEnd = find(text, end);
+
+    let itemOpen;
+    /**@type {import("./internal").Block[]} */
+    let blocks = [];
+
+    itemsEnd = equal
+        ? itemsEnd
+        : itemsEnd.filter(
+              (block) =>
+                  !itemsOpen.some(
+                      ({ indexOpen, indexEnd }) =>
+                          block.indexOpen >= indexOpen &&
+                          block.indexOpen <= indexEnd
+                  )
+          );
+
+    while ((itemOpen = itemsOpen.pop())) {
+        let nextItemsEnd = [...itemsEnd];
+        let itemEnd;
+        itemsEnd = [];
+        while ((itemEnd = nextItemsEnd.shift())) {
+            if (itemEnd.indexOpen > itemOpen.indexEnd) {
+                blocks.unshift({ open: itemOpen, end: itemEnd });
+                itemsEnd.push(...nextItemsEnd);
+                break;
+            } else {
+                itemsEnd.push(itemEnd);
+            }
+        }
+    }
+
+    let parentBlock;
+
+    return blocks.filter((block) => {
+        if (!parentBlock) {
+            parentBlock = block;
+            return true;
+        }
+        if (
+            block.open.indexOpen > parentBlock.open.indexOpen &&
+            block.end.indexEnd < parentBlock.end.indexEnd
+        ) {
+            return false;
+        } else {
+            parentBlock = block;
+            return true;
+        }
+    });
 }

@@ -1,6 +1,6 @@
 {
   "name": "@uppercod/str-fragment",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Capture text fragments based on regular expressions that are executed for each line of the text",
   "main": "cjs.js",
   "module": "esm.js",
@@ -10,7 +10,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "test": "ava",
+    "test": "uvu -r esm tests",
     "prepare": "npm run build && npm test"
   },
   "repository": {
@@ -25,7 +25,9 @@
   "homepage": "https://github.com/uppercod/str-fragment#readme",
   "devDependencies": {
     "ava": "^3.10.1",
-    "rollup": "^2.21.0"
+    "esm": "^3.2.25",
+    "rollup": "^2.21.0",
+    "uvu": "^0.3.0"
   },
   "typings": "types.d.ts",
   "ava": {
