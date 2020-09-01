@@ -1,3 +1,7 @@
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
 /**
  *
  * @typedef {Object} CallbackParam
@@ -146,4 +150,7 @@ function getFragments(text, { open, end, equal }) {
     });
 }
 
-export { getFragments, replaceFragments, walkFragments };
+exports.getFragments = getFragments;
+exports.replaceFragments = replaceFragments;
+exports.walkFragments = walkFragments;
+//# sourceMappingURL=index.js.map
