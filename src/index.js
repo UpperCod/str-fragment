@@ -3,8 +3,9 @@ export * from "./utils";
  *
  * @param {string} text
  * @param {RegExp} reg
+ * @param {boolean} [end]
  */
-function find(text, reg) {
+function find(text, reg, end) {
     let current;
     let position = 0;
     /**@type {import("./internal").Item[]} */
@@ -18,6 +19,7 @@ function find(text, reg) {
             args,
             indexOpen: position + current.index,
             indexEnd: position + length,
+            end,
         });
         position += length;
         text = text.slice(length);
@@ -30,54 +32,41 @@ function find(text, reg) {
  * @param {{open:RegExp,end:RegExp,equal:boolean}} find
  */
 export function getFragments(text, { open, end, equal }) {
-    let itemsOpen = find(text, open);
-    let itemsEnd = find(text, end);
+    const itemsOpen = find(text, open);
+    const itemsEnd = find(text, end, true);
+    const min = itemsOpen[0] ? itemsOpen[0].indexEnd : 0;
+    const items = [
+        ...itemsOpen,
+        ...itemsEnd.filter(
+            (item) =>
+                item.indexOpen > min &&
+                (equal ||
+                    !itemsOpen.some(
+                        ({ indexOpen, indexEnd }) =>
+                            item.indexOpen >= indexOpen &&
+                            item.indexEnd <= indexEnd
+                    ))
+        ),
+    ].sort((a, b) => (a.indexOpen > b.indexOpen ? 1 : -1));
 
-    let itemOpen;
     /**@type {import("./internal").Block[]} */
     let blocks = [];
-
-    itemsEnd = equal
-        ? itemsEnd
-        : itemsEnd.filter(
-              (block) =>
-                  !itemsOpen.some(
-                      ({ indexOpen, indexEnd }) =>
-                          block.indexOpen >= indexOpen &&
-                          block.indexOpen <= indexEnd
-                  )
-          );
-
-    while ((itemOpen = itemsOpen.pop())) {
-        let nextItemsEnd = [...itemsEnd];
-        let itemEnd;
-        itemsEnd = [];
-        while ((itemEnd = nextItemsEnd.shift())) {
-            if (itemEnd.indexOpen > itemOpen.indexEnd) {
-                blocks.unshift({ open: itemOpen, end: itemEnd });
-                itemsEnd.push(...nextItemsEnd);
-                break;
+    let item;
+    let nested = 0;
+    while ((item = items.shift())) {
+        for (let i = 0; i < items.length; i++) {
+            const next = items[i];
+            if (next.end) {
+                if (!nested--) {
+                    nested = nested > 0 ? nested : 0;
+                    blocks.push({ open: item, end: next });
+                    items.splice(0, i + 1);
+                    break;
+                }
             } else {
-                itemsEnd.push(itemEnd);
+                nested++;
             }
         }
     }
-
-    let parentBlock;
-
-    return blocks.filter((block) => {
-        if (!parentBlock) {
-            parentBlock = block;
-            return true;
-        }
-        if (
-            block.open.indexOpen > parentBlock.open.indexOpen &&
-            block.end.indexEnd < parentBlock.end.indexEnd
-        ) {
-            return false;
-        } else {
-            parentBlock = block;
-            return true;
-        }
-    });
+    return blocks;
 }

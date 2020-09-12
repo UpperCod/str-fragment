@@ -3,6 +3,7 @@ export interface Item {
     args: any[];
     indexOpen: number;
     indexEnd: number;
+    end: boolean;
 }
 
 export interface Block {
