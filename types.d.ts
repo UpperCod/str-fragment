@@ -1,5 +1,7 @@
 import { Block, Item } from "./internal";
 
+export { Block, Item } from "./internal";
+
 export interface Config {
     open: RegExp;
     end: RegExp;
