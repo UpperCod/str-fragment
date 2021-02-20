@@ -1,6 +1,6 @@
 import { test } from "uvu";
 import * as assert from "uvu/assert";
-import { getFragments, replaceFragments } from "../src";
+import { getFragments, replaceFragments } from "../src/str-fragment.js";
 
 let cases = {
     frontmatter: {

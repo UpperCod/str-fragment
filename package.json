@@ -16,7 +16,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "test": "uvu -r esm tests",
+    "test": "uvu  tests",
     "prepare": "npm run build && npm test"
   },
   "repository": {

@@ -1,4 +1,4 @@
-export * from "./utils";
+export * from "./utils.js";
 /**
  *
  * @param {string} text
