@@ -1,5 +1,5 @@
 export default {
-    input: "./src/index.js",
+    input: "./src/str-fragment.js",
     output: {
         file: "str-fragment.cjs",
         format: "cjs",
