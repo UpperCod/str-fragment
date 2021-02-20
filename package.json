@@ -1,9 +1,15 @@
 {
   "name": "@uppercod/str-fragment",
-  "version": "1.2.1",
+  "version": "1.3.0",
+  "type": "module",
   "description": "Capture text fragments based on regular expressions that are executed for each line of the text",
-  "main": "cjs/index.js",
-  "module": "esm/index.js",
+  "main": "./str-fragment.js",
+  "module": "./src/str-fragment.js",
+  "exports": {
+    "import": "./src/str-fragment.js",
+    "require": "./str-fragment.js"
+  },
+  "typings": "types.d.ts",
   "publishConfig": {
     "access": "public"
   },
@@ -23,23 +29,13 @@
     "url": "https://github.com/uppercod/str-fragment/issues"
   },
   "homepage": "https://github.com/uppercod/str-fragment#readme",
-  "dependencies": {},
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^9.0.0",
-    "ava": "^3.10.1",
-    "builtin-modules": "^3.1.0",
-    "esm": "^3.2.25",
-    "rollup": "^2.21.0",
-    "uvu": "^0.3.0"
+    "rollup": "^2.39.0",
+    "uvu": "^0.5.1"
   },
-  "typings": "types.d.ts",
   "ava": {
     "files": [
       "test/**/*.test.js"
     ]
-  },
-  "exports": {
-    "import": "./ems/index.js",
-    "require": "./cjs/index.js"
   }
 }

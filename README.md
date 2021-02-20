@@ -23,7 +23,7 @@ let s = "";
 /**@type {import("str-fragment/internal").captures}*/
 let fragments = getFragment(str, {
     open: /\/\*\*/,
-    closed: /\*\//,
+    end: /\*\//,
     equal: false, // if fragments share capture equality set equal to true
 });
 
