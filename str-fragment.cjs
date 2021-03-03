@@ -101,7 +101,7 @@ function find(text, reg, end) {
  */
 function getFragments(text, { open, end, equal }) {
     const itemsOpen = find(text, open);
-    let itemsEnd = find(text, end, true);
+    let itemsEnd = find(text, end, true).slice(0, itemsOpen.length);
     const min = itemsOpen[0] ? itemsOpen[0].indexEnd : 0;
     if (equal) {
         itemsOpen.forEach((item, index) => {
