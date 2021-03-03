@@ -22,6 +22,18 @@ new content
 
 ## md?`,
     },
+    literal: {
+        input: `
+const style = /*css*/\`
+        :host{width: 200px;}
+\`
+
+const jsx = <host class={\`.header\${height:200px}\`}>
+`,
+        output: `
+
+`,
+    },
 };
 
 test("simple replace", async (t) => {
