@@ -33,7 +33,7 @@ function find(text, reg, end) {
  */
 export function getFragments(text, { open, end, equal }) {
     const itemsOpen = find(text, open);
-    let itemsEnd = find(text, end, true).slice(0, itemsOpen.length);
+    let itemsEnd = find(text, end, true);
     const min = itemsOpen[0] ? itemsOpen[0].indexEnd : 0;
     if (equal) {
         itemsOpen.forEach((item, index) => {
@@ -43,14 +43,17 @@ export function getFragments(text, { open, end, equal }) {
     }
     const items = [
         ...itemsOpen,
-        ...itemsEnd.filter(
-            (item) =>
-                item.indexOpen > min &&
-                !itemsOpen.some(
-                    ({ indexOpen, indexEnd }) =>
-                        item.indexOpen >= indexOpen && item.indexEnd <= indexEnd
-                )
-        ),
+        ...itemsEnd
+            .filter(
+                (item) =>
+                    item.indexOpen > min &&
+                    !itemsOpen.some(
+                        ({ indexOpen, indexEnd }) =>
+                            item.indexOpen >= indexOpen &&
+                            item.indexEnd <= indexEnd
+                    )
+            )
+            .slice(0, itemsOpen.length),
     ].sort((a, b) => (a.indexOpen > b.indexOpen ? 1 : -1));
     /**@type {import("./internal").Block[]} */
     let blocks = [];
